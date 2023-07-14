@@ -2,10 +2,24 @@ package io.github.dnowaj.json
 
 import io.github.dnowak.json.ElementProperty
 import io.github.dnowak.json.Json
-import io.github.dnowak.json.Json.*
+import io.github.dnowak.json.Json.JsonArray
+import io.github.dnowak.json.Json.JsonBool
+import io.github.dnowak.json.Json.JsonElement
+import io.github.dnowak.json.Json.JsonNull
+import io.github.dnowak.json.Json.JsonNumber
+import io.github.dnowak.json.Json.JsonString
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.*
-import io.kotest.property.checkAll
+import io.kotest.property.arbitrary.Codepoint
+import io.kotest.property.arbitrary.arbitrary
+import io.kotest.property.arbitrary.az
+import io.kotest.property.arbitrary.boolean
+import io.kotest.property.arbitrary.constant
+import io.kotest.property.arbitrary.element
+import io.kotest.property.arbitrary.filterNot
+import io.kotest.property.arbitrary.int
+import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.map
+import io.kotest.property.arbitrary.string
 import kotlin.reflect.KClass
 
 fun <T : Any> arbitrarySealedSubclass(klass: KClass<T>): Arb<KClass<out T>> = Arb.element(klass.sealedSubclasses)
@@ -51,37 +65,4 @@ fun Arb.Companion.jsonElement(elements: Map<String, Arb<Json>>): Arb<JsonElement
         .map { (key, arb) -> ElementProperty(key, arb.bind()) }
         .toList()
         .let(::JsonElement)
-}
-
-suspend fun main() {
-    println("---> Null")
-    val jsonNullArb: Arb<JsonNull> = Arb.json()
-    jsonNullArb.checkAll(iterations = 10) {
-        println(it)
-    }
-
-    println("---> Bool")
-    val jsonBoolArb: Arb<JsonBool> = Arb.json()
-    jsonBoolArb.checkAll(iterations = 10) {
-        println(it)
-    }
-
-    println("---> String")
-    val jsonStringArb: Arb<JsonString> = Arb.json()
-    jsonStringArb.checkAll(iterations = 10) {
-        println(it)
-    }
-
-    println("---> Array")
-    val jsonArrayArb: Arb<JsonArray> = Arb.json()
-    jsonArrayArb.checkAll(iterations = 10) {
-        println(it)
-    }
-
-    println("---> Element")
-    val jsonElementArb: Arb<JsonElement> = Arb.json()
-    jsonElementArb.checkAll(iterations = 10) {
-        println(it)
-    }
-
 }
