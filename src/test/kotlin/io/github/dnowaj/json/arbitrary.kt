@@ -15,6 +15,7 @@ fun <J : Json> arbitraryJson(klass: KClass<J>): Arb<J> = when (klass) {
     JsonBool::class -> Arb.jsonBool() as Arb<J>
     JsonNull::class -> Arb.constant(JsonNull) as Arb<J>
     JsonNumber::class -> Arb.jsonNumber() as Arb<J>
+    JsonString::class -> Arb.jsonString() as Arb<J>
     JsonArray::class -> {
         arbitrary {
             val valueClass = arbitrarySealedSubclass(Json::class).filterNot { it == JsonArray::class  }.bind()
@@ -24,19 +25,16 @@ fun <J : Json> arbitraryJson(klass: KClass<J>): Arb<J> = when (klass) {
     }
     JsonElement::class -> {
         val arbValue: Arb<Json> = arbitrary {
-            val valueClass = arbitrarySealedSubclass(Json::class).bind()
+            val valueClass = arbitrarySealedSubclass(Json::class).filterNot { it == JsonElement::class  || it == JsonArray::class}.bind()
             arbitraryJson(valueClass).bind()
         }
         arbitrary {
-            Arb.map(Arb.string(2, 10), arbValue).bind()
+            Arb.map(Arb.string(4, 16, Codepoint.az()), arbValue).bind()
                 .map { (name, json) -> ElementProperty(name, json) }
                 .toList()
                 .let(::JsonElement)
-            //TODO:: jsonElement(elements)
         } as Arb<J>
-        Arb.constant(JsonElement(listOf(ElementProperty("constant", JsonString("value"))))) as Arb<J>
     }
-    JsonString::class -> Arb.jsonString() as Arb<J>
     else -> throw IllegalArgumentException("Unsupported Json type: <$klass>")
 }
 
@@ -46,6 +44,8 @@ fun Arb.Companion.jsonNumber(arb: Arb<Int> = Arb.int()): Arb<JsonNumber> = arb.m
 
 fun Arb.Companion.jsonString(arb: Arb<String> = Arb.string(1, 16, Codepoint.az())): Arb<JsonString> = arb.map(::JsonString)
 
+fun Arb.Companion.jsonArray(values: Arb<Json>, length: IntRange = 1 .. 10): Arb<JsonArray> = Arb.list(values, length).map(::JsonArray)
+
 fun Arb.Companion.jsonElement(elements: Map<String, Arb<Json>>): Arb<JsonElement> = arbitrary {
     elements
         .map { (key, arb) -> ElementProperty(key, arb.bind()) }
@@ -54,31 +54,34 @@ fun Arb.Companion.jsonElement(elements: Map<String, Arb<Json>>): Arb<JsonElement
 }
 
 suspend fun main() {
+    println("---> Null")
     val jsonNullArb: Arb<JsonNull> = Arb.json()
     jsonNullArb.checkAll(iterations = 10) {
         println(it)
     }
 
+    println("---> Bool")
     val jsonBoolArb: Arb<JsonBool> = Arb.json()
     jsonBoolArb.checkAll(iterations = 10) {
         println(it)
     }
 
+    println("---> String")
     val jsonStringArb: Arb<JsonString> = Arb.json()
     jsonStringArb.checkAll(iterations = 10) {
         println(it)
     }
 
+    println("---> Array")
     val jsonArrayArb: Arb<JsonArray> = Arb.json()
     jsonArrayArb.checkAll(iterations = 10) {
         println(it)
     }
 
-    /*
+    println("---> Element")
     val jsonElementArb: Arb<JsonElement> = Arb.json()
-    jsonElementArb.checkAll {
+    jsonElementArb.checkAll(iterations = 10) {
         println(it)
     }
 
-     */
 }
