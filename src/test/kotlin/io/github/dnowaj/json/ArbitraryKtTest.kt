@@ -5,8 +5,6 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
 
-import org.junit.jupiter.api.Assertions.*
-
 class ArbitraryKtTest : FreeSpec({
     "Arbitrary for JsonNull" {
         val jsonNullArb: Arb<Json.JsonNull> = Arb.json()
