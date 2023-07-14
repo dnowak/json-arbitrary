@@ -21,6 +21,7 @@
 
 # Gradle
 .gradle
+build
 
 # IDEA
 .idea
